@@ -152,24 +152,9 @@
             color: #888;
             padding: 50px 0;
         }
-        
-        /* شاشة سوداء لمنع التقاط الشاشة */
-        #screen-blocker {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            z-index: 9999;
-            display: none; /* مخفي بشكل افتراضي */
-        }
-
     </style>
 </head>
 <body>
-
-    <div id="screen-blocker"></div>
 
     <div class="container">
         <div class="header">
@@ -217,78 +202,14 @@
         const questionsContainer = document.getElementById('questions-container');
         const examTimerDisplay = document.getElementById('exam-timer');
         const submitBtn = document.getElementById('submit-btn');
-        const screenBlocker = document.getElementById('screen-blocker');
-
-        // ======================================
-        // أكواد منع فحص العنصر وتسجيل الشاشة
-        // ======================================
 
         // منع النقر بزر الماوس الأيمن
         document.addEventListener('contextmenu', event => event.preventDefault());
-
-        // منع اختصارات لوحة المفاتيح
-        document.addEventListener('keydown', event => {
-            // F12 key
-            if (event.key === 'F12') {
-                event.preventDefault();
-            }
-            // Ctrl+Shift+I (Windows)
-            if (event.ctrlKey && event.shiftKey && event.key === 'I') {
-                event.preventDefault();
-            }
-            // Ctrl+Shift+J (Windows)
-            if (event.ctrlKey && event.shiftKey && event.key === 'J') {
-                event.preventDefault();
-            }
-            // Ctrl+U (View Page Source)
-            if (event.ctrlKey && event.key === 'U') {
-                event.preventDefault();
-            }
-            // Cmd+Alt+I (Mac)
-            if (event.metaKey && event.altKey && event.key === 'I') {
-                event.preventDefault();
-            }
-            // Cmd+Alt+J (Mac)
-            if (event.metaKey && event.altKey && event.key === 'J') {
-                event.preventDefault();
-            }
-        });
 
         // منع النسخ والقص واللصق
         document.addEventListener('copy', event => event.preventDefault());
         document.addEventListener('cut', event => event.preventDefault());
         document.addEventListener('paste', event => event.preventDefault());
-        
-        // وظيفة تفعيل وإلغاء تفعيل الشاشة السوداء
-        function toggleScreenBlocker(state) {
-            if (state === 'show') {
-                screenBlocker.style.display = 'block';
-            } else {
-                screenBlocker.style.display = 'none';
-            }
-        }
-        
-        // استماع لأحداث فقدان التركيز (blur)
-        window.addEventListener('blur', () => {
-            toggleScreenBlocker('show');
-        });
-
-        window.addEventListener('focus', () => {
-            toggleScreenBlocker('hide');
-        });
-
-        // استماع لتغيرات الرؤية في الصفحة
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                toggleScreenBlocker('show');
-            } else {
-                toggleScreenBlocker('hide');
-            }
-        });
-
-        // ======================================
-        // نهاية أكواد المنع
-        // ======================================
 
         // التحقق من حالة المستخدم وتحميل الامتحان
         auth.onAuthStateChanged(async (user) => {
@@ -484,4 +405,3 @@
     </script>
 </body>
 </html>
-
