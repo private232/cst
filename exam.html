@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>صفحة الامتحان</title>
-    
+
     <style>
         :root {
             --primary-color: #6C5CE7;
@@ -63,7 +63,7 @@
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
         }
-        
+
         .question-image {
             max-width: 100%;
             height: auto;
@@ -121,7 +121,7 @@
             flex-grow: 1;
             padding-right: 10px;
         }
-        
+
         .option-item.selected .option-label {
             color: #fff;
         }
@@ -151,6 +151,20 @@
             font-size: 18px;
             color: #888;
             padding: 50px 0;
+        }
+
+        /* ---------------------------------------------------- */
+        /* CSS to hide content during screenshot on some platforms */
+        /* ---------------------------------------------------- */
+        /* This works on some mobile devices and modern browsers, but is not universal */
+        .prevent-screenshot {
+          background-color: black;
+          color: black !important;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+          pointer-events: none; /* Disables interaction */
         }
     </style>
 </head>
@@ -211,6 +225,76 @@
         document.addEventListener('cut', event => event.preventDefault());
         document.addEventListener('paste', event => event.preventDefault());
 
+        // ----------------------------------------------------
+        //  Screen Capture Deterrent Logic (start)
+        // ----------------------------------------------------
+        // This is a common but not foolproof method. It's often bypassed.
+        function preventScreenCapture(isPreventing) {
+            const body = document.body;
+            if (isPreventing) {
+                body.style.filter = 'invert(1)';
+                body.style.pointerEvents = 'none';
+            } else {
+                body.style.filter = 'none';
+                body.style.pointerEvents = 'auto';
+            }
+        }
+        
+        // This event listener can be a strong signal for a user that you are monitoring their actions.
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                // User may have switched tabs, minimized the window, or started a screen capture.
+                // You can pause the timer here or even auto-submit the exam.
+                // For this example, we will just alert the user.
+                alert('الرجاء عدم مغادرة الصفحة أثناء الامتحان.');
+                // Optional: You could call finishExam() here to auto-submit
+            }
+        });
+        
+        // Android/iOS method - this CSS is sometimes respected by mobile OSs
+        document.body.classList.add('prevent-screenshot');
+
+        // An overlay might be a better approach to show a message
+        function showScreenCaptureWarning() {
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+            overlay.style.color = '#fff';
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.style.zIndex = '10000';
+            overlay.style.fontSize = '24px';
+            overlay.innerHTML = '<p>تم اكتشاف محاولة التقاط شاشة. سيتم إيقاف الامتحان تلقائيًا.</p>';
+            document.body.appendChild(overlay);
+
+            setTimeout(() => {
+                finishExam();
+            }, 3000); // Auto-submit after 3 seconds
+        }
+
+        // The following part is experimental and not guaranteed to work on all browsers.
+        // The Clipboard API can sometimes be used to detect a copy event
+        document.addEventListener('keydown', (e) => {
+          if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'v' || (e.key === 'a' && e.shiftKey))) {
+            e.preventDefault();
+            alert('عملية غير مسموحة!');
+          }
+          // Detect Print Screen Key (varies by browser/OS)
+          if (e.key === 'PrintScreen' || e.key === 'F13') {
+              // This part is very unreliable.
+              console.log('PrintScreen key detected.');
+              // You can try to blur the content or show a warning.
+          }
+        });
+        // ----------------------------------------------------
+        //  Screen Capture Deterrent Logic (end)
+        // ----------------------------------------------------
+
         // التحقق من حالة المستخدم وتحميل الامتحان
         auth.onAuthStateChanged(async (user) => {
             if (user) {
@@ -222,7 +306,7 @@
                 if (examId && examYear) {
                     const adminSnapshot = await adminRef.child(currentUser.uid).once('value');
                     const isAdmin = adminSnapshot.exists();
-                    
+
                     if (!isAdmin) {
                         const completedSnapshot = await usersRef.child(currentUser.uid).child('completedExams').child(examId).once('value');
                         if (completedSnapshot.exists()) {
@@ -254,7 +338,7 @@
 
             questions = Object.values(examData.questions);
             timeLeft = (examData.duration || 30) * 60; // المدة بالدقائق
-            
+
             loadSavedAnswers();
             renderQuestions();
         }
@@ -278,7 +362,7 @@
             questions.forEach((q, index) => {
                 const questionCard = document.createElement('div');
                 questionCard.className = 'question-card';
-                
+
                 let imageHtml = '';
                 if (q.imageBase64) {
                     imageHtml = `<img src="${q.imageBase64}" class="question-image" alt="Question Image">`;
@@ -294,7 +378,7 @@
                         </li>
                     `;
                 });
-                
+
                 questionCard.innerHTML = `
                     <p class="question-text"><strong>السؤال ${index + 1}:</strong> ${q.question}</p>
                     ${imageHtml}
@@ -302,7 +386,7 @@
                         ${optionsHtml}
                     </ul>
                 `;
-                
+
                 questionsContainer.appendChild(questionCard);
 
                 // إضافة معالج حدث للاختيار
@@ -311,7 +395,7 @@
                     item.addEventListener('click', () => {
                         const value = item.dataset.value;
                         const questionIndex = item.dataset.index;
-                        
+
                         // إزالة التحديد من جميع الخيارات الأخرى
                         item.parentNode.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('selected'));
                         // إضافة التحديد للخيار الحالي
@@ -332,7 +416,7 @@
                 const minutes = Math.floor(timeLeft / 60);
                 const seconds = timeLeft % 60;
                 examTimerDisplay.textContent = `الوقت المتبقي: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-                
+
                 if (timeLeft <= 0) {
                     finishExam();
                 }
@@ -344,9 +428,9 @@
             if (examFinished) return;
             examFinished = true;
             clearInterval(timerInterval);
-            
+
             const score = calculateScore();
-            
+
             const updateData = {
                 [`completedExams/${examId}`]: {
                     score: score,
@@ -354,16 +438,16 @@
                     completedAt: new Date().toISOString()
                 }
             };
-            
+
             const userRef = usersRef.child(currentUser.uid);
             await userRef.update(updateData);
 
             await userRef.child('marks').transaction((currentMarks) => {
                 return (currentMarks || 0) + score;
             });
-            
+
             localStorage.removeItem(`exam_answers_${examId}`);
-            
+
             alert(`لقد انتهى الامتحان! درجتك هي: ${score} من ${questions.length}.`);
             window.location.replace('Wallet.html');
         }
@@ -381,21 +465,21 @@
 
         // معالج حدث زر الإرسال
         submitBtn.addEventListener('click', finishExam);
-        
+
         // منع المستخدم من مغادرة الصفحة وإرسال النتيجة
         window.addEventListener('beforeunload', (event) => {
             if (!examFinished) {
                 // تسليم الامتحان تلقائيًا
                 const score = calculateScore();
                 const userRef = usersRef.child(currentUser.uid);
-                
+
                 // حفظ الإجابات في قاعدة البيانات
                 userRef.child('completedExams').child(examId).set({
                     score: score,
                     totalQuestions: questions.length,
                     completedAt: new Date().toISOString()
                 });
-                
+
                 // تحديث الدرجات في قاعدة البيانات
                 userRef.child('marks').transaction((currentMarks) => {
                     return (currentMarks || 0) + score;
