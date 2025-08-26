@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحة الامتحان</title>
+    
+    <style>
+        :root {
+            --primary-color: #6C5CE7;
+            --secondary-color: #A29BFE;
+            --dark-color: #2D3436;
+            --light-color: #F5F6FA;
+            --accent-color: #00CE9F;
+            --danger-color: #D63031;
+        }
+
+        body {
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(to bottom, rgba(108, 92, 231, 0.1), var(--light-color));
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+            text-align: right;
+            color: var(--dark-color);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+            padding: 10px 20px;
+            background-color: var(--light-color);
+            border-radius: 10px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-card {
+            background-color: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .question-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .question-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--dark-color);
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid var(--secondary-color);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .option-item:hover {
+            background-color: rgba(162, 155, 254, 0.1);
+        }
+
+        .option-item.selected {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .option-item.selected .option-label {
+            color: #fff;
+        }
+
+        .option-radio {
+            display: none;
+        }
+
+        .option-label {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--dark-color);
+            flex-grow: 1;
+            padding-right: 10px;
+        }
+        
+        .option-item.selected .option-label {
+            color: #fff;
+        }
+
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 30px;
+            background-color: var(--accent-color);
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 20px;
+        }
+
+        .btn-submit:hover {
+            background-color: #00b388;
+            transform: translateY(-2px);
+        }
+
+        .no-questions {
+            text-align: center;
+            font-size: 18px;
+            color: #888;
+            padding: 50px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div id="exam-timer" class="timer">...</div>
+        </div>
+
+        <div id="questions-container">
+        </div>
+
+        <button id="submit-btn" class="btn-submit">تسليم الامتحان</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script>
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: 'AIzaSyBpwRyAO9Hd0y06AFxQP2VJqiwucD02kHE',
+            appId: '1:728424288022:web:3fc8d5379263ca3b99ca37',
+            messagingSenderId: '728424288022',
+            projectId: 'e-learning-3aef4',
+            authDomain: 'e-learning-3aef4.firebaseapp.com',
+            databaseURL: 'https://e-learning-3aef4-default-rtdb.firebaseio.com',
+            storageBucket: 'e-learning-3aef4.firebasestorage.app',
+            measurementId: 'G-GTTZ690T29'
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        const examsRef = database.ref('exams');
+        const usersRef = database.ref('users');
+        const adminRef = database.ref('admins');
+
+        let currentUser = null;
+        let examId = '';
+        let examYear = '';
+        let questions = [];
+        let answers = {};
+        let timeLeft = 0;
+        let timerInterval = null;
+        let examFinished = false;
+
+        const questionsContainer = document.getElementById('questions-container');
+        const examTimerDisplay = document.getElementById('exam-timer');
+        const submitBtn = document.getElementById('submit-btn');
+
+        // منع النقر بزر الماوس الأيمن
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // منع النسخ والقص واللصق
+        document.addEventListener('copy', event => event.preventDefault());
+        document.addEventListener('cut', event => event.preventDefault());
+        document.addEventListener('paste', event => event.preventDefault());
+
+        // التحقق من حالة المستخدم وتحميل الامتحان
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                const urlParams = new URLSearchParams(window.location.search);
+                examId = urlParams.get('id');
+                examYear = urlParams.get('year');
+
+                if (examId && examYear) {
+                    const adminSnapshot = await adminRef.child(currentUser.uid).once('value');
+                    const isAdmin = adminSnapshot.exists();
+                    
+                    if (!isAdmin) {
+                        const completedSnapshot = await usersRef.child(currentUser.uid).child('completedExams').child(examId).once('value');
+                        if (completedSnapshot.exists()) {
+                            alert('لقد أكملت هذا الامتحان بالفعل ولا يمكنك إعادة دخوله.');
+                            window.location.replace('wallet.html');
+                            return;
+                        }
+                    }
+
+                    await loadExamData();
+                    startTimer();
+                } else {
+                    questionsContainer.innerHTML = '<p class="no-questions">خطأ: لم يتم تحديد الامتحان.</p>';
+                }
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        // وظيفة جلب بيانات الامتحان من Firebase
+        async function loadExamData() {
+            const examSnapshot = await examsRef.child(examYear).child(examId).once('value');
+            const examData = examSnapshot.val();
+
+            if (!examData || !examData.questions) {
+                questionsContainer.innerHTML = '<p class="no-questions">لا توجد أسئلة متاحة لهذا الامتحان.</p>';
+                return;
+            }
+
+            questions = Object.values(examData.questions);
+            timeLeft = (examData.duration || 30) * 60; // المدة بالدقائق
+            
+            loadSavedAnswers();
+            renderQuestions();
+        }
+
+        // حفظ الإجابات في التخزين المحلي
+        function saveAnswers() {
+            localStorage.setItem(`exam_answers_${examId}`, JSON.stringify(answers));
+        }
+
+        // تحميل الإجابات المحفوظة
+        function loadSavedAnswers() {
+            const savedAnswers = localStorage.getItem(`exam_answers_${examId}`);
+            if (savedAnswers) {
+                answers = JSON.parse(savedAnswers);
+            }
+        }
+
+        // عرض الأسئلة على الصفحة
+        function renderQuestions() {
+            questionsContainer.innerHTML = '';
+            questions.forEach((q, index) => {
+                const questionCard = document.createElement('div');
+                questionCard.className = 'question-card';
+                
+                let imageHtml = '';
+                if (q.imageBase64) {
+                    imageHtml = `<img src="${q.imageBase64}" class="question-image" alt="Question Image">`;
+                }
+
+                let optionsHtml = '';
+                q.options.forEach(option => {
+                    const isSelected = answers[index] === option;
+                    optionsHtml += `
+                        <li class="option-item ${isSelected ? 'selected' : ''}" data-value="${option}" data-index="${index}">
+                            <input type="radio" name="question-${index}" id="q${index}-opt${option.replace(/\s+/g, '-')}" class="option-radio" value="${option}" ${isSelected ? 'checked' : ''}>
+                            <label for="q${index}-opt${option.replace(/\s+/g, '-')}" class="option-label">${option}</label>
+                        </li>
+                    `;
+                });
+                
+                questionCard.innerHTML = `
+                    <p class="question-text"><strong>السؤال ${index + 1}:</strong> ${q.question}</p>
+                    ${imageHtml}
+                    <ul class="options-list">
+                        ${optionsHtml}
+                    </ul>
+                `;
+                
+                questionsContainer.appendChild(questionCard);
+
+                // إضافة معالج حدث للاختيار
+                const optionItems = questionCard.querySelectorAll('.option-item');
+                optionItems.forEach(item => {
+                    item.addEventListener('click', () => {
+                        const value = item.dataset.value;
+                        const questionIndex = item.dataset.index;
+                        
+                        // إزالة التحديد من جميع الخيارات الأخرى
+                        item.parentNode.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('selected'));
+                        // إضافة التحديد للخيار الحالي
+                        item.classList.add('selected');
+
+                        answers[questionIndex] = value;
+                        saveAnswers();
+                    });
+                });
+            });
+        }
+
+        // وظيفة المؤقت
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                examTimerDisplay.textContent = `الوقت المتبقي: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    finishExam();
+                }
+            }, 1000);
+        }
+
+        // وظيفة إنهاء الامتحان وحساب الدرجة
+        async function finishExam() {
+            if (examFinished) return;
+            examFinished = true;
+            clearInterval(timerInterval);
+            
+            const score = calculateScore();
+            
+            const updateData = {
+                [`completedExams/${examId}`]: {
+                    score: score,
+                    totalQuestions: questions.length,
+                    completedAt: new Date().toISOString()
+                }
+            };
+            
+            const userRef = usersRef.child(currentUser.uid);
+            await userRef.update(updateData);
+
+            await userRef.child('marks').transaction((currentMarks) => {
+                return (currentMarks || 0) + score;
+            });
+            
+            localStorage.removeItem(`exam_answers_${examId}`);
+            
+            alert(`لقد انتهى الامتحان! درجتك هي: ${score} من ${questions.length}.`);
+            window.location.replace('wallet.html');
+        }
+
+        function calculateScore() {
+            let score = 0;
+            questions.forEach((q, index) => {
+                const correctAnswer = q.correctAnswer;
+                if (answers[index] && answers[index].trim() === correctAnswer.trim()) {
+                    score++;
+                }
+            });
+            return score;
+        }
+
+        // معالج حدث زر الإرسال
+        submitBtn.addEventListener('click', finishExam);
+        
+        // منع المستخدم من مغادرة الصفحة وإرسال النتيجة
+        window.addEventListener('beforeunload', (event) => {
+            if (!examFinished) {
+                // تسليم الامتحان تلقائيًا
+                const score = calculateScore();
+                const userRef = usersRef.child(currentUser.uid);
+                
+                // حفظ الإجابات في قاعدة البيانات
+                userRef.child('completedExams').child(examId).set({
+                    score: score,
+                    totalQuestions: questions.length,
+                    completedAt: new Date().toISOString()
+                });
+                
+                // تحديث الدرجات في قاعدة البيانات
+                userRef.child('marks').transaction((currentMarks) => {
+                    return (currentMarks || 0) + score;
+                });
+            }
+        });
+    </script>
+</body>
+</html>

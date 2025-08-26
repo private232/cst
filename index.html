@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CATALYST</title>
+    <!-- Google Fonts for Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Link to the external CSS file -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase JS SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <!-- App Bar -->
+    <div class="app-bar">
+        <button id="list-btn" class="list-btn hidden">
+            <i class="material-icons">menu</i>
+        </button>
+        <h1>CATALYST</h1>
+    </div>
+
+    <!-- Side Menu -->
+    <div id="side-menu" class="side-menu">
+        <div class="side-menu-header">
+            <i class="material-icons">account_circle_rounded</i>
+            <span>My Profile</span>
+        </div>
+        <a id="dashboard-btn" class="side-menu-item">
+            <i class="material-icons">home_rounded</i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="wallet.html" class="side-menu-item">
+            <i class="material-icons">account_balance_wallet_rounded</i>
+            <span>الامتحانات</span>
+        </a>
+        <a href="mylec.html" class="side-menu-item" id="lectures-btn">
+            <i class="material-icons">ondemand_video_rounded</i>
+            <span>محاضراتي</span>
+        </a>
+        <a href="#" class="side-menu-item" id="logout-btn">
+            <i class="material-icons">logout_rounded</i>
+            <span>تسجيل خروج</span>
+        </a>
+    </div>
+    <div id="overlay" class="overlay hidden"></div>
+
+    <!-- Main Content Container -->
+    <div class="container">
+        <div id="message-box" class="message-box hidden"></div>
+
+        <!-- Login Section -->
+        <div id="login-section">
+            <div class="login-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="Enter your password">
+                </div>
+                <button id="login-btn" class="btn">تسجيل الدخول</button>
+                <div id="login-error" class="error-message hidden"></div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="hidden">
+            <div class="posts-container" id="posts-container">
+                <div class="loading">جاري تحميل المنشورات...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link to the external JavaScript file -->
+    <script src="script.js"></script>
+</body>
+</html>

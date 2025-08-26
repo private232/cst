@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محاضراتي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* تعريف الألوان والمتغيرات */
+        :root {
+            --primary-color: #6C5CE7;
+            --secondary-color: #A29BFE;
+            --dark-color: #2D3436;
+            --light-color: #F5F6FA;
+            --accent-color: #00CE9F;
+            --danger-color: #E74C3C;
+        }
+
+        /* إعادة تعيين الأنماط الأساسية */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* أنماط الجسم والخلفية */
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+        }
+        
+        /* أنماط الحاوية الرئيسية */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* أنماط رأس الصفحة (AppBar) */
+        .appbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .appbar-title {
+            font-size: 20px;
+            font-weight: bold;
+            flex-grow: 1;
+            text-align: center;
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: auto;
+        }
+
+        /* أنماط قائمة المحاضرات */
+        .lectures-list {
+            padding: 12px;
+        }
+
+        .lecture-card {
+            background-color: white;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        
+        .lecture-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .lecture-card-content {
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .lecture-icon {
+            font-size: 50px;
+            color: var(--primary-color);
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .lecture-info {
+            flex-grow: 1;
+        }
+
+        .lecture-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lecture-number {
+            font-size: 20px;
+            font-weight: normal;
+            color: var(--dark-color);
+        }
+
+        /* أنماط مؤشر التحميل */
+        .loading-spinner {
+            display: block;
+            margin: 50px auto;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #888;
+            font-size: 18px;
+        }
+        
+        /* رسائل التنبيه */
+        .snackbar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            z-index: 1001;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .snackbar.show {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+    <div class="appbar">
+        <button class="back-button" onclick="window.history.back()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="appbar-title" id="appbar-title">محاضراتي</div>
+    </div>
+
+    <div class="container lectures-list" id="lectures-list">
+        <div class="loading-spinner" id="loading-spinner"></div>
+    </div>
+
+    <div id="snackbar" class="snackbar"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+    <script>
+        // منع فتح فحص العنصر
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if (e.key === "F12" || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.shiftKey && e.key === 'C') || (e.ctrlKey && e.shiftKey && e.key === 'J')) {
+                return false;
+            }
+        };
+
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: 'AIzaSyBpwRyAO9Hd0y06AFxQP2VJqiwucD02kHE',
+            appId: '1:728424288022:web:3fc8d5379263ca3b99ca37',
+            messagingSenderId: '728424288022',
+            projectId: 'e-learning-3aef4',
+            authDomain: 'e-learning-3aef4.firebaseapp.com',
+            databaseURL: 'https://e-learning-3aef4-default-rtdb.firebaseio.com',
+            storageBucket: 'e-learning-3aef4.firebasestorage.app',
+            measurementId: 'G-GTTZ690T29',
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        let lectures = [];
+
+        // قاموس لربط أسماء السنوات باللغتين
+        const yearMapping = {
+            'أولى': 'first',
+            'ثانية كيمياء': 'second_chemistry',
+            'ثانية فيزياء': 'second_physics',
+            'ثالثة': 'third'
+        };
+
+        // قاموس لعرض أسماء السنوات
+        const yearDisplayNames = {
+            'first': 'أولى',
+            'second_chemistry': 'ثانية كيمياء',
+            'second_physics': 'ثانية فيزياء',
+            'third': 'ثالثة',
+        };
+
+        // عرض رسالة تنبيه
+        function showSnackBar(message) {
+            const snackbar = document.getElementById('snackbar');
+            snackbar.textContent = message;
+            snackbar.classList.add('show');
+            setTimeout(() => {
+                snackbar.classList.remove('show');
+            }, 3000);
+        }
+
+        // تحميل المحاضرات من قاعدة البيانات بناءً على السنة
+        async function fetchLectures(year) {
+            const lecturesList = document.getElementById('lectures-list');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const appbarTitle = document.getElementById('appbar-title');
+            
+            const yearDisplayName = yearDisplayNames[year] || 'غير معروفة';
+            appbarTitle.textContent = `محاضرات سنة ${yearDisplayName}`;
+            
+            lectures = [];
+            lecturesList.innerHTML = '';
+            loadingSpinner.style.display = 'block';
+
+            try {
+                const snapshot = await database.ref(`lectures/${year}`).once('value');
+                const lecturesData = snapshot.val();
+                
+                if (lecturesData) {
+                    lectures = Object.keys(lecturesData).map(key => ({
+                        id: key,
+                        ...lecturesData[key]
+                    }));
+                    
+                    lectures.sort((a, b) => {
+                        const numA = parseInt(a.lectureNumber) || 0;
+                        const numB = parseInt(b.lectureNumber) || 0;
+                        return numA - numB;
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching lectures:', error);
+                showSnackBar('حدث خطأ أثناء تحميل المحاضرات.');
+            } finally {
+                loadingSpinner.style.display = 'none';
+                displayLectures(year);
+            }
+        }
+
+        // عرض المحاضرات على الصفحة
+        function displayLectures(year) {
+            const lecturesList = document.getElementById('lectures-list');
+            lecturesList.innerHTML = '';
+            const yearDisplayName = yearDisplayNames[year] || 'غير معروفة';
+
+            if (lectures.length === 0) {
+                lecturesList.innerHTML = `<div class="empty-state">لا توجد محاضرات لسنة ${yearDisplayName}</div>`;
+                return;
+            }
+
+            lectures.forEach(lecture => {
+                const card = document.createElement('div');
+                card.className = 'lecture-card';
+                card.innerHTML = `
+                    <div class="lecture-card-content">
+                        <i class="fas fa-video lecture-icon"></i>
+                        <div class="lecture-info">
+                            <div class="lecture-title">${lecture.title}</div>
+                        </div>
+                        <div class="lecture-number">${lecture.lectureNumber}</div>
+                    </div>
+                `;
+                card.addEventListener('click', () => {
+                    showSnackBar(`تشغيل المحاضرة: ${lecture.title}`);
+                });
+                lecturesList.appendChild(card);
+            });
+        }
+
+        // الاستماع لحالة تسجيل الدخول لتحديد السنة الدراسية
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                database.ref(`users/${user.uid}/year`).once('value')
+                    .then(snapshot => {
+                        const userYear = snapshot.val();
+                        // استخدام القاموس لتحويل الاسم العربي إلى الاسم الإنجليزي
+                        const mappedYear = yearMapping[userYear] || 'third';
+                        
+                        if (!yearDisplayNames[mappedYear]) {
+                            showSnackBar('لم يتم العثور على سنة دراسية، سيتم عرض محاضرات السنة الثالثة.');
+                        }
+                        fetchLectures(mappedYear);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching user year:', error);
+                        showSnackBar('حدث خطأ أثناء جلب بيانات المستخدم.');
+                        fetchLectures('third'); // عرض المحاضرات الافتراضية
+                    });
+            } else {
+                showSnackBar('يرجى تسجيل الدخول لعرض المحاضرات.');
+                // يمكن إضافة كود لإعادة التوجيه لصفحة تسجيل الدخول هنا
+            }
+        });
+    </script>
+</body>
+</html>

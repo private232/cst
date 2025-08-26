@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحة الامتحانات</title>
+    
+    <style>
+        :root {
+            --primary-color: #6C5CE7;
+            --secondary-color: #A29BFE;
+            --dark-color: #2D3436;
+            --light-color: #F5F6FA;
+            --accent-color: #00CE9F;
+            --danger-color: #D63031;
+        }
+
+        body {
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--light-color);
+            margin: 0;
+            padding: 20px;
+            direction: rtl; /* يدعم اللغة العربية */
+            text-align: right;
+            background: linear-gradient(to bottom, rgba(108, 92, 231, 0.1), var(--light-color));
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .back-btn {
+            background-color: #ccc;
+            color: var(--dark-color);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .back-btn:hover {
+            background-color: #bbb;
+        }
+
+        .back-btn img {
+            width: 20px;
+            height: 20px;
+            transform: scaleX(-1); /* يعكس السهم ليكون متجهًا لليسار */
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--dark-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .marks-section {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .marks-display {
+            font-size: 90px;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+
+        .divider {
+            border: none;
+            height: 1px;
+            background-color: var(--dark-color);
+            opacity: 0.3;
+            margin: 20px 0;
+        }
+
+        .exams-section {
+            padding: 20px;
+        }
+
+        .exam-card {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+
+        .exam-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .exam-details {
+            flex-grow: 1;
+        }
+
+        .exam-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .exam-score {
+            font-size: 14px;
+            color: var(--dark-color);
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .exam-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .icon-btn img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .admin-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            padding: 20px 0;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border-radius: 30px;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+
+        .btn-accent {
+            background-color: var(--accent-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--light-color);
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .modal-title {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .modal-btn-cancel {
+            background-color: #ccc;
+            color: var(--dark-color);
+        }
+
+        .modal-btn-submit {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="top-bar">
+            <button class="back-btn" onclick="window.location.href = 'index.html';">
+                <img src="https://api.iconify.design/material-symbols:arrow-back-ios-new.svg?color=%232d3436" alt="Back">
+                رجوع
+            </button>
+        </div>
+
+        <div class="marks-section">
+            <h2 class="section-title">الدرجات</h2>
+            <div id="user-marks" class="marks-display">0</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="exams-section">
+            <h2 class="section-title">قسم الامتحانات</h2>
+            <div id="exam-list">
+            </div>
+        </div>
+
+        <div id="admin-actions" class="admin-actions" style="display: none;">
+            <button id="add-marks-btn" class="btn btn-primary">إضافة/خصم درجات</button>
+            <button id="create-exam-btn" class="btn btn-accent">إنشاء امتحان</button>
+        </div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script>
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: 'AIzaSyBpwRyAO9Hd0y06AFxQP2VJqiwucD02kHE',
+            appId: '1:728424288022:web:3fc8d5379263ca3b99ca37',
+            messagingSenderId: '728424288022',
+            projectId: 'e-learning-3aef4',
+            authDomain: 'e-learning-3aef4.firebaseapp.com',
+            databaseURL: 'https://e-learning-3aef4-default-rtdb.firebaseio.com',
+            storageBucket: 'e-learning-3aef4.firebasestorage.app',
+            measurementId: 'G-GTTZ690T29'
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        const adminRef = database.ref('admins');
+        const examsRef = database.ref('exams');
+        const usersRef = database.ref('users');
+
+        let currentUser = null;
+        let isAdmin = false;
+        let userYear = null;
+        let selectedYear = 'أولى';
+
+        const examListContainer = document.getElementById('exam-list');
+        const userMarksDisplay = document.getElementById('user-marks');
+        const adminActionsDiv = document.getElementById('admin-actions');
+        const addMarksBtn = document.getElementById('add-marks-btn');
+        const createExamBtn = document.getElementById('create-exam-btn');
+
+        // تحقق من حالة تسجيل الدخول
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                await checkAdminStatus();
+                if (!isAdmin) {
+                    await fetchUserYear();
+                } else {
+                    // للمشرف، اعرض جميع السنوات
+                    selectedYear = 'أولى'; 
+                }
+                await loadExamList();
+                listenForUserMarks();
+            } else {
+                // Redirect to login page
+                window.location.href = 'login.html'; // يفترض وجود صفحة تسجيل دخول
+            }
+        });
+
+        // وظائف جلب البيانات
+        async function checkAdminStatus() {
+            const snapshot = await adminRef.child(currentUser.uid).once('value');
+            isAdmin = snapshot.exists();
+            if (isAdmin) {
+                adminActionsDiv.style.display = 'flex';
+            }
+        }
+
+        async function fetchUserYear() {
+            const snapshot = await usersRef.child(currentUser.uid).child('year').once('value');
+            userYear = snapshot.val();
+            selectedYear = userYear || 'أولى';
+        }
+
+        function listenForUserMarks() {
+            usersRef.child(currentUser.uid).child('marks').on('value', (snapshot) => {
+                const marks = snapshot.val() || 0;
+                userMarksDisplay.textContent = marks;
+            });
+        }
+
+        async function loadExamList() {
+            if (!selectedYear) return;
+
+            examsRef.child(selectedYear).on('value', async (snapshot) => {
+                examListContainer.innerHTML = '';
+                const exams = snapshot.val();
+                if (!exams) {
+                    examListContainer.innerHTML = '<p class="text-center text-muted">لا توجد امتحانات متاحة.</p>';
+                    return;
+                }
+
+                const examIds = Object.keys(exams);
+                for (const examId of examIds) {
+                    const examData = exams[examId];
+                    const examCard = document.createElement('div');
+                    examCard.className = 'exam-card';
+                    examCard.dataset.id = examId;
+                    examCard.dataset.year = selectedYear;
+
+                    const isLocked = examData.isLocked || false;
+
+                    let scoreText = '';
+                    if (!isAdmin) {
+                        const completedSnapshot = await usersRef.child(currentUser.uid).child('completedExams').child(examId).once('value');
+                        if (completedSnapshot.exists()) {
+                            const score = completedSnapshot.val().score;
+                            const totalQuestions = completedSnapshot.val().totalQuestions;
+                            scoreText = `<p class="exam-score">الدرجة: ${score} / ${totalQuestions}</p>`;
+                        }
+                    }
+                    
+                    examCard.innerHTML = `
+                        <div class="exam-details">
+                            <h3 class="exam-title">${examData.title}</h3>
+                            ${scoreText}
+                        </div>
+                        ${isAdmin ? `
+                        <div class="exam-actions">
+                            <button class="icon-btn lock-btn" data-id="${examId}" data-locked="${isLocked}">
+                                <img src="${isLocked ? 'icons/lock.svg' : 'icons/lock-open.svg'}" alt="lock icon">
+                            </button>
+                            <button class="icon-btn delete-btn" data-id="${examId}">
+                                <img src="icons/delete.svg" alt="delete icon">
+                            </button>
+                        </div>
+                        ` : ''}
+                    `;
+
+                    examCard.addEventListener('click', () => handleExamClick(examId, examData));
+                    
+                    examListContainer.appendChild(examCard);
+                }
+            });
+        }
+
+        // معالجات الأحداث
+        function handleExamClick(examId, examData) {
+            if (examData.isLocked) {
+                alert('هذا الامتحان مقفل ولا يمكنك الدخول إليه.');
+                return;
+            }
+
+            if (!isAdmin) {
+                usersRef.child(currentUser.uid).child('completedExams').child(examId).once('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        alert('لقد أكملت هذا الامتحان بالفعل ولا يمكنك إعادة دخوله.');
+                    } else {
+                        // Redirect to exam page
+                        window.location.href = `exam.html?id=${examId}&year=${selectedYear}`; // يجب إنشاء صفحة exam.html
+                    }
+                });
+            } else {
+                // Redirect to exam page for admin preview
+                window.location.href = `exam.html?id=${examId}&year=${selectedYear}`; // يجب إنشاء صفحة exam.html
+            }
+        }
+
+        addMarksBtn.addEventListener('click', () => {
+            // Show a modal for adding/subtracting marks
+            const email = prompt("أدخل البريد الإلكتروني للمستخدم:");
+            const marks = prompt("أدخل عدد الدرجات (+ أو -):");
+            if (email && marks) {
+                updateUserMarks(email, parseInt(marks));
+            }
+        });
+
+        createExamBtn.addEventListener('click', () => {
+            window.location.href = 'create_exam.html'; // يجب إنشاء صفحة create_exam.html
+        });
+
+        // وظائف المشرف
+        async function updateUserMarks(email, marks) {
+            const usersSnapshot = await usersRef.once('value');
+            const usersData = usersSnapshot.val();
+            let foundUser = false;
+            for (const userId in usersData) {
+                if (usersData[userId].email.toLowerCase() === email.toLowerCase()) {
+                    const currentMarks = usersData[userId].marks || 0;
+                    await usersRef.child(userId).child('marks').set(currentMarks + marks);
+                    alert('تم تحديث الدرجات بنجاح!');
+                    foundUser = true;
+                    break;
+                }
+            }
+            if (!foundUser) {
+                alert('لم يتم العثور على المستخدم.');
+            }
+        }
+
+        document.addEventListener('click', async (e) => {
+            if (e.target.closest('.delete-btn')) {
+                const examId = e.target.closest('.delete-btn').dataset.id;
+                if (confirm('هل أنت متأكد أنك تريد حذف هذا الامتحان؟')) {
+                    await examsRef.child(selectedYear).child(examId).remove();
+                    alert('تم حذف الامتحان بنجاح.');
+                }
+            }
+            
+            if (e.target.closest('.lock-btn')) {
+                const lockBtn = e.target.closest('.lock-btn');
+                const examId = lockBtn.dataset.id;
+                const isLocked = lockBtn.dataset.locked === 'true';
+                await examsRef.child(selectedYear).child(examId).child('isLocked').set(!isLocked);
+                alert(isLocked ? 'تم فتح الامتحان.' : 'تم قفل الامتحان.');
+                // تحديث الأيقونة
+                lockBtn.dataset.locked = !isLocked;
+                lockBtn.querySelector('img').src = isLocked ? 'icons/lock-open.svg' : 'icons/lock.svg';
+            }
+        });
+
+        // كود منع فحص العنصر
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('copy', event => event.preventDefault());
+        document.addEventListener('cut', event => event.preventDefault());
+        document.addEventListener('paste', event => event.preventDefault());
+    </script>
+</body>
+</html>
