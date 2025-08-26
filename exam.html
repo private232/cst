@@ -306,7 +306,7 @@
                         const completedSnapshot = await usersRef.child(currentUser.uid).child('completedExams').child(examId).once('value');
                         if (completedSnapshot.exists()) {
                             alert('لقد أكملت هذا الامتحان بالفعل ولا يمكنك إعادة دخوله.');
-                            window.location.replace('wallet.html');
+                            window.location.replace('Wallet.html');
                             return;
                         }
                     }
@@ -444,7 +444,7 @@
             localStorage.removeItem(`exam_answers_${examId}`);
             
             alert(`لقد انتهى الامتحان! درجتك هي: ${score} من ${questions.length}.`);
-            window.location.replace('wallet.html');
+            window.location.replace('Wallet.html');
         }
 
         function calculateScore() {
@@ -484,3 +484,4 @@
     </script>
 </body>
 </html>
+
