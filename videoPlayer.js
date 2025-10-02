@@ -87,7 +87,7 @@ const videoPlayer = (() => {
             return;
         }
         
-        const parent = videoContainer.parentNode;
+// ... (داخل دالة initializePlayer في videoPlayer.js)
         const newVideoContainer = document.createElement('video');
         newVideoContainer.id = 'web-video-player';
         newVideoContainer.className = 'video-js vjs-default-skin';
@@ -95,6 +95,17 @@ const videoPlayer = (() => {
         newVideoContainer.preload = 'auto';
         newVideoContainer.setAttribute('data-setup', '{}');
         newVideoContainer.setAttribute('playsinline', '');
+
+        // 🛑 الخصائص الأمنية الجديدة: 🛑
+        // 1. خاصية منع النسخ والالتقاط على مستوى DOM (لبعض الأجهزة)
+        newVideoContainer.setAttribute('data-nosniff', 'true'); 
+        // 2. خاصية لإجبار بعض الأجهزة على تفعيل الحماية في Android/Chrome
+        newVideoContainer.setAttribute('secure', 'true');
+        // 3. منع المتصفح من وضع الفيديو كطبقة عليا (قد يحسن الحماية)
+        newVideoContainer.style.setProperty('z-index', '99999'); 
+        newVideoContainer.style.setProperty('transform', 'translateZ(0)');
+
+        // ... (بقية الكود)
         
         parent.replaceChild(newVideoContainer, videoContainer);
         
