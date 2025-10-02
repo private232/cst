@@ -3,203 +3,384 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محاضراتي</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>محاضراتي - نظام الويب</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@silvermine/videojs-quality-selector@1.1.1/dist/js/videojs-quality-selector.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@silvermine/videojs-quality-selector@1.1.1/dist/css/videojs-quality-selector.css" rel="stylesheet" />
+
     <style>
-        /* تعريف الألوان والمتغيرات */
+        /* ================================================= */
+        /* === CSS Styles for Responsive and Professional Look === */
+        /* ================================================= */
+
         :root {
             --primary-color: #6C5CE7;
-            --secondary-color: #A29BFE;
-            --dark-color: #2D3436;
-            --light-color: #F5F6FA;
-            --accent-color: #00CE9F;
-            --danger-color: #E74C3C;
+            --secondary-color: #f8f9fa;
+            --success-color: #155724;
+            --error-color: #dc3545;
+            --text-active: #343a40;
+            --text-inactive: #6c757d;
         }
 
-        /* إعادة تعيين الأنماط الأساسية */
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Tajawal', sans-serif;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
+            direction: rtl;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* أنماط الجسم والخلفية */
-        body {
-            background-color: var(--light-color);
-            color: var(--dark-color);
+        body, html {
+            background-color: var(--secondary-color);
+            min-height: 100vh;
         }
-        
-        /* أنماط الحاوية الرئيسية */
-        .container {
-            max-width: 800px;
+
+        /* App Structure */
+        #app {
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            min-height: 100vh;
         }
 
-        /* أنماط رأس الصفحة (AppBar) */
-        .appbar {
+        /* AppBar/Header */
+        .app-bar {
             background-color: var(--primary-color);
             color: white;
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .appbar-title {
+        .app-bar h1 {
             font-size: 20px;
             font-weight: bold;
-            flex-grow: 1;
-            text-align: center;
         }
         
+        /* Back Button */
         .back-button {
             background: none;
             border: none;
             color: white;
-            font-size: 24px;
             cursor: pointer;
+            font-size: 18px;
             padding: 5px;
-            margin-left: auto;
-        }
-
-        /* أنماط قائمة المحاضرات */
-        .lectures-list {
-            padding: 12px;
-        }
-
-        .lecture-card {
-            background-color: white;
-            border-radius: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-        }
-        
-        .lecture-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .lecture-card-content {
-            padding: 12px;
             display: flex;
             align-items: center;
-            gap: 12px;
+        }
+        .back-button:hover { opacity: 0.8; }
+
+        /* Dropdown for Admin */
+        .dropdown-container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 0 10px;
         }
 
-        .lecture-icon {
-            font-size: 50px;
-            color: var(--primary-color);
-            min-width: 50px;
-            text-align: center;
+        .year-dropdown {
+            background: transparent;
+            color: white;
+            border: none;
+            padding: 8px 10px;
+            font-weight: bold;
+            font-size: 16px;
+            appearance: none; /* Hide default dropdown arrow */
+            cursor: pointer;
         }
         
-        .lecture-info {
-            flex-grow: 1;
+        .dropdown-container::after {
+            content: '▼';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 10px;
+            pointer-events: none;
         }
 
-        .lecture-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--primary-color);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        /* Loading & Empty State */
+        .loading-container, .empty-state {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+            color: var(--text-inactive);
+            font-size: 18px;
         }
-
-        .lecture-number {
-            font-size: 20px;
-            font-weight: normal;
-            color: var(--dark-color);
-        }
-
-        /* أنماط مؤشر التحميل */
-        .loading-spinner {
-            display: block;
-            margin: 50px auto;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid var(--primary-color);
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid var(--primary-color);
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 50px;
-            color: #888;
-            font-size: 18px;
+        /* Month and Lecture Card Styling */
+        .list-container {
+            padding: 15px;
         }
         
-        /* رسائل التنبيه */
-        .snackbar {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            z-index: 1001;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
+        .list-item {
+            background-color: white;
+            border-radius: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #ccc;
+            overflow: hidden;
+            transition: all 0.2s;
         }
 
-        .snackbar.show {
+        .list-item-active {
+            border-color: var(--primary-color);
+            box-shadow: 0 6px 15px rgba(108, 92, 231, 0.2);
+        }
+        
+        .list-item-content {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .list-item-inactive .list-item-content {
+            cursor: default;
+            opacity: 0.7;
+        }
+        
+        .text-column {
+            flex-grow: 1;
+            padding-left: 15px;
+        }
+        
+        .name {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: block;
+        }
+        
+        .status-text {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 4px;
+            display: block;
+        }
+        
+        .icon-column svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Lecture List Specific Styles */
+        .lecture-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            object-fit: cover;
+            background-color: rgba(108, 92, 231, 0.1);
+            color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .lecture-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        .lecture-number {
+            font-size: 20px;
+            font-weight: normal;
+            color: black;
+            padding-right: 15px;
+            flex-shrink: 0;
+        }
+
+        /* ================================================= */
+        /* === Video Player Container (Full Screen) === */
+        /* ================================================= */
+        .video-player-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index: 1000;
+            display: none; /* Controlled by JS */
+        }
+        
+        .video-player-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Video.js Override Styles */
+        .video-js {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Speed/Quality/Close Buttons Overlay */
+        .video-overlay-controls {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allow clicks to pass through to the video player by default */
+        }
+        
+        .top-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: all; /* Make buttons clickable */
+        }
+
+        .close-btn {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .custom-control-btn {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-left: 10px;
+            cursor: pointer;
+            pointer-events: all;
+        }
+        
+        /* Custom Double-Tap Seek Indicator */
+        .seek-indicator {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 60px;
+            opacity: 0;
+            transition: opacity 0.1s;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+        }
+        
+        .seek-indicator.show {
             opacity: 1;
-            visibility: visible;
+        }
+        
+        .seek-left { left: 10%; }
+        .seek-right { right: 10%; }
+
+
+        /* ================================================= */
+        /* === Responsive Design (Mobile First) === */
+        /* ================================================= */
+
+        /* Tablet and Desktop adjustments */
+        @media (min-width: 768px) {
+            .app-bar h1 {
+                font-size: 24px;
+            }
+
+            .list-container {
+                padding: 20px;
+            }
+
+            .list-item {
+                margin-bottom: 15px;
+            }
+            
+            .list-item-content {
+                padding: 20px;
+            }
+            
+            .name {
+                font-size: 20px;
+            }
+            
+            .status-text {
+                font-size: 15px;
+            }
+            
+            .lecture-icon {
+                width: 60px;
+                height: 60px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="appbar">
-        <button class="back-button" onclick="window.history.back()">
-            <i class="fas fa-arrow-left"></i>
-        </button>
-        <div class="appbar-title" id="appbar-title">محاضراتي</div>
+    <div id="app">
+        </div>
+    
+    <div id="video-player-screen" class="video-player-container">
+        <div class="video-player-content">
+             <video id="web-video-player" class="video-js vjs-default-skin" controls preload="auto" data-setup='{}' playsinline></video>
+        </div>
+        
+        <div class="video-overlay-controls">
+            <div class="top-controls">
+                <div class="left-group">
+                    </div>
+                <button class="close-btn" onclick="videoPlayer.exitPlayer()">&#10005;</button>
+            </div>
+            
+            <div id="seek-left-indicator" class="seek-indicator seek-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 60px; height: 60px;">
+                    <path d="M11 19l-7-7 7-7"></path><path d="M12 19l-7-7 7-7"></path><path d="M15 15l-3-3 3-3"></path>
+                </svg>
+            </div>
+            <div id="seek-right-indicator" class="seek-indicator seek-right">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 60px; height: 60px;">
+                    <path d="M13 19l7-7-7-7"></path><path d="M12 19l7-7-7-7"></path><path d="M9 15l3-3-3-3"></path>
+                </svg>
+            </div>
+        </div>
     </div>
-
-    <div class="container lectures-list" id="lectures-list">
-        <div class="loading-spinner" id="loading-spinner"></div>
-    </div>
-
-    <div id="snackbar" class="snackbar"></div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
     <script>
-        // منع فتح فحص العنصر
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        document.onkeydown = function(e) {
-            if (e.key === "F12" || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.shiftKey && e.key === 'C') || (e.ctrlKey && e.shiftKey && e.key === 'J')) {
-                return false;
-            }
-        };
+        // =================================================
+        // === JavaScript & Firebase Logic ===
+        // =================================================
 
-        // تهيئة Firebase
         const firebaseConfig = {
             apiKey: 'AIzaSyBpwRyAO9Hd0y06AFxQP2VJqiwucD02kHE',
             appId: '1:728424288022:web:3fc8d5379263ca3b99ca37',
@@ -211,21 +392,6 @@
             measurementId: 'G-GTTZ690T29',
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
-
-        let lectures = [];
-
-        // قاموس لربط أسماء السنوات باللغتين
-        const yearMapping = {
-            'أولى': 'first',
-            'ثانية كيمياء': 'second_chemistry',
-            'ثانية فيزياء': 'second_physics',
-            'ثالثة': 'third'
-        };
-
-        // قاموس لعرض أسماء السنوات
         const yearDisplayNames = {
             'first': 'أولى',
             'second_chemistry': 'ثانية كيمياء',
@@ -233,108 +399,487 @@
             'third': 'ثالثة',
         };
 
-        // عرض رسالة تنبيه
-        function showSnackBar(message) {
-            const snackbar = document.getElementById('snackbar');
-            snackbar.textContent = message;
-            snackbar.classList.add('show');
-            setTimeout(() => {
-                snackbar.classList.remove('show');
-            }, 3000);
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        const FBServerValue = firebase.database.ServerValue;
+
+        // Global State (Simplified for single-file JS)
+        let state = {
+            isAdmin: false, // يجب تعيينها بناءً على المستخدم المسجل دخوله
+            isAuthLoading: true,
+            user: null,
+            userYearKey: null,
+            selectedYearKey: 'third',
+            availableMonths: [],
+            studentMonthAccess: {},
+            currentScreen: 'months', // 'months', 'lectures', 'video'
+            currentLectureData: null,
+            currentMonthName: null,
+        };
+
+        const appDiv = document.getElementById('app');
+        const videoPlayerScreen = document.getElementById('video-player-screen');
+
+        // =================================================
+        // === Helper Functions (Data Fetching) ===
+        // =================================================
+
+        async function fetchUserDataAndAccess() {
+            if (state.isAuthLoading) return;
+
+            let currentYearKey = 'third';
+            state.studentMonthAccess = {};
+
+            if (state.user && !state.isAdmin) {
+                // 1.1 Fetch User Year
+                try {
+                    const yearSnapshot = await database.ref(`users/${state.user.uid}/year`).once('value');
+                    if (yearSnapshot.exists()) {
+                        const yearDisplayName = yearSnapshot.val();
+                        const yearEntry = Object.entries(yearDisplayNames).find(([, value]) => value === yearDisplayName);
+                        if (yearEntry) {
+                            currentYearKey = yearEntry[0];
+                            state.userYearKey = currentYearKey;
+                        }
+                    }
+                } catch (e) { console.error("Error fetching user year:", e); }
+
+                // 1.2 Fetch Student Month Access
+                try {
+                    const accessSnapshot = await database.ref(`student_month_access/${state.user.uid}`).once('value');
+                    if (accessSnapshot.exists()) {
+                        const accessData = accessSnapshot.val();
+                        Object.entries(accessData).forEach(([key, value]) => {
+                            if (typeof value === 'number') {
+                                state.studentMonthAccess[key] = value;
+                            } else {
+                                state.studentMonthAccess[key] = 0;
+                            }
+                        });
+                    }
+                } catch (e) { console.error('Error fetching student month access:', e); }
+            }
+
+            state.selectedYearKey = currentYearKey;
+            await fetchMonths(currentYearKey);
         }
 
-        // تحميل المحاضرات من قاعدة البيانات بناءً على السنة
-        async function fetchLectures(year) {
-            const lecturesList = document.getElementById('lectures-list');
-            const loadingSpinner = document.getElementById('loading-spinner');
-            const appbarTitle = document.getElementById('appbar-title');
-            
-            const yearDisplayName = yearDisplayNames[year] || 'غير معروفة';
-            appbarTitle.textContent = `محاضرات سنة ${yearDisplayName}`;
-            
-            lectures = [];
-            lecturesList.innerHTML = '';
-            loadingSpinner.style.display = 'block';
+        async function fetchMonths(yearKey) {
+            renderLoading();
+            state.availableMonths = [];
 
             try {
-                const snapshot = await database.ref(`lectures/${year}`).once('value');
-                const lecturesData = snapshot.val();
-                
-                if (lecturesData) {
-                    lectures = Object.keys(lecturesData).map(key => ({
-                        id: key,
-                        ...lecturesData[key]
-                    }));
-                    
-                    lectures.sort((a, b) => {
-                        const numA = parseInt(a.lectureNumber) || 0;
-                        const numB = parseInt(b.lectureNumber) || 0;
-                        return numA - numB;
-                    });
+                const snapshot = await database.ref(`months/${yearKey}`).once('value');
+                if (snapshot.exists()) {
+                    const monthsData = snapshot.val();
+                    if (monthsData) {
+                        let months = [];
+                        Object.entries(monthsData).forEach(([key, value]) => {
+                            months.push({ id: key, name: value.name, order: value.order });
+                        });
+
+                        // Sort by order
+                        months.sort((a, b) => (a.order || 999) - (b.order || 999));
+                        state.availableMonths = months;
+                    }
                 }
-            } catch (error) {
-                console.error('Error fetching lectures:', error);
-                showSnackBar('حدث خطأ أثناء تحميل المحاضرات.');
+            } catch (e) {
+                console.error('Error fetching months:', e);
+                alert(`حدث خطأ أثناء تحميل الشهور: ${e}`);
             } finally {
-                loadingSpinner.style.display = 'none';
-                displayLectures(year);
+                renderScreen();
+            }
+        }
+        
+        async function fetchLectures(yearKey, monthId) {
+            renderLoading();
+            let lectures = [];
+            
+            try {
+                const snapshot = await database.ref(`lectures/${yearKey}/${monthId}`).once('value');
+                if (snapshot.exists()) {
+                    const lecturesData = snapshot.val();
+                    if (lecturesData) {
+                        Object.entries(lecturesData).forEach(([key, value]) => {
+                            lectures.push(value);
+                        });
+                        // Sort by lectureNumber
+                        lectures.sort((a, b) => {
+                            const numA = parseInt(a.lectureNumber || '0');
+                            const numB = parseInt(b.lectureNumber || '0');
+                            return numA - numB;
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error('Error fetching lectures:', e);
+                alert(`حدث خطأ أثناء تحميل المحاضرات: ${e}`);
+            } finally {
+                renderLectureList(lectures);
             }
         }
 
-        // عرض المحاضرات على الصفحة
-        function displayLectures(year) {
-            const lecturesList = document.getElementById('lectures-list');
-            lecturesList.innerHTML = '';
-            const yearDisplayName = yearDisplayNames[year] || 'غير معروفة';
+        async function logLectureAccess(lectureTitle) {
+            if (!state.user || state.isAdmin) return;
 
-            if (lectures.length === 0) {
-                lecturesList.innerHTML = `<div class="empty-state">لا توجد محاضرات لسنة ${yearDisplayName}</div>`;
-                return;
+            try {
+                const logRef = database.ref(`lecture_access_logs/${state.user.uid}`).push();
+                await logRef.set({
+                    lectureTitle: lectureTitle,
+                    timestamp: FBServerValue.TIMESTAMP,
+                    monthId: state.currentLectureData.monthId,
+                    yearKey: state.currentLectureData.yearKey,
+                });
+                console.log('تم تسجيل وصول الطالب إلى المحاضرة:', lectureTitle);
+            } catch (e) {
+                console.error('حدث خطأ أثناء تسجيل الوصول:', e);
             }
+        }
 
-            lectures.forEach(lecture => {
-                const card = document.createElement('div');
-                card.className = 'lecture-card';
-                card.innerHTML = `
-                    <div class="lecture-card-content">
-                        <i class="fas fa-video lecture-icon"></i>
-                        <div class="lecture-info">
-                            <div class="lecture-title">${lecture.title}</div>
-                        </div>
-                        <div class="lecture-number">${lecture.lectureNumber}</div>
+        // =================================================
+        // === Rendering Logic (DOM Manipulation) ===
+        // =================================================
+
+        function renderLoading() {
+            appDiv.innerHTML = `
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                </div>
+            `;
+        }
+        
+        function renderScreen() {
+            switch (state.currentScreen) {
+                case 'months':
+                    renderMonthsList();
+                    break;
+                case 'lectures':
+                    // This is handled by renderLectureList after fetching
+                    break;
+                case 'video':
+                    // Video player is handled by the dedicated component (videoPlayer.js)
+                    break;
+                default:
+                    renderMonthsList();
+            }
+        }
+
+        function renderMonthsList() {
+            const currentYearName = yearDisplayNames[state.selectedYearKey] || 'غير معروفة';
+
+            // AppBar HTML
+            let appBarHtml = `
+                <header class="app-bar">
+                    <h1>محاضراتي</h1>
+            `;
+
+            if (state.isAdmin) {
+                const options = Object.entries(yearDisplayNames).map(([key, value]) => 
+                    `<option value="${key}" ${key === state.selectedYearKey ? 'selected' : ''}>${value}</option>`
+                ).join('');
+                
+                appBarHtml += `
+                    <div class="dropdown-container">
+                        <select class="year-dropdown" onchange="onYearChanged(this.value)">
+                            ${options}
+                        </select>
                     </div>
                 `;
-                card.addEventListener('click', () => {
-                    showSnackBar(`تشغيل المحاضرة: ${lecture.title}`);
-                });
-                lecturesList.appendChild(card);
-            });
+            }
+            appBarHtml += `</header>`;
+
+            // Main Content HTML
+            let contentHtml = '';
+            if (state.availableMonths.length === 0) {
+                contentHtml = `
+                    <div class="empty-state">
+                        لا توجد شهور/وحدات مُضافة لسنة ${currentYearName} حاليًا
+                    </div>
+                `;
+            } else {
+                const now = Date.now();
+                
+                const listItems = state.availableMonths.map(month => {
+                    const monthId = month.id;
+                    const monthName = month.name || 'شهر غير مسمى';
+                    const expiryTimestamp = state.studentMonthAccess[monthId] || 0;
+                    const isExpired = expiryTimestamp < now;
+                    const hasAccess = state.isAdmin || (!isExpired && expiryTimestamp > 0);
+
+                    let statusText = '';
+                    let statusColor = 'var(--error-color)';
+                    let onTap = `openLectureList('${state.selectedYearKey}', '${monthId}', '${monthName}')`;
+
+                    if (!state.isAdmin) {
+                        if (hasAccess) {
+                            const remainingDuration = expiryTimestamp - now;
+                            const remainingDays = Math.floor(remainingDuration / (1000 * 60 * 60 * 24)) + 1;
+                            statusText = `متبقي: ${remainingDays} أيام`;
+                            statusColor = 'var(--success-color)';
+                        } else if (expiryTimestamp > 0) {
+                            statusText = 'منتهي الصلاحية';
+                            statusColor = 'var(--error-color)';
+                            onTap = '';
+                        } else {
+                            statusText = 'غير متاح';
+                            statusColor = 'var(--text-inactive)';
+                            onTap = '';
+                        }
+                    } else {
+                        statusText = ''; // Admins don't show status text
+                    }
+
+                    const cardClass = hasAccess ? 'list-item-active' : 'list-item-inactive';
+                    const textColor = hasAccess ? 'var(--primary-color)' : 'var(--text-inactive)';
+                    const iconColor = hasAccess ? 'var(--primary-color)' : 'var(--error-color)';
+                    const cursorStyle = hasAccess ? 'pointer' : 'default';
+
+                    const icon = hasAccess ? 
+                        `<svg viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>` :
+                        `<svg viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>`;
+
+                    return `
+                        <div class="list-item ${cardClass}" onclick="${onTap}" style="cursor: ${cursorStyle};">
+                            <div class="list-item-content">
+                                <div class="text-column">
+                                    <span class="name" style="color: ${textColor};">${monthName}</span>
+                                    ${!state.isAdmin && statusText ? `<span class="status-text" style="color: ${statusColor};">${statusText}</span>` : ''}
+                                </div>
+                                <div class="icon-column">
+                                    ${icon}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                contentHtml = `<div class="list-container">${listItems}</div>`;
+            }
+
+            appDiv.innerHTML = appBarHtml + contentHtml;
+            state.currentLectureData = null;
         }
 
-        // الاستماع لحالة تسجيل الدخول لتحديد السنة الدراسية
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                database.ref(`users/${user.uid}/year`).once('value')
-                    .then(snapshot => {
-                        const userYear = snapshot.val();
-                        // استخدام القاموس لتحويل الاسم العربي إلى الاسم الإنجليزي
-                        const mappedYear = yearMapping[userYear] || 'third';
-                        
-                        if (!yearDisplayNames[mappedYear]) {
-                            showSnackBar('لم يتم العثور على سنة دراسية، سيتم عرض محاضرات السنة الثالثة.');
-                        }
-                        fetchLectures(mappedYear);
-                    })
-                    .catch(error => {
-                        console.error('Error fetching user year:', error);
-                        showSnackBar('حدث خطأ أثناء جلب بيانات المستخدم.');
-                        fetchLectures('third'); // عرض المحاضرات الافتراضية
-                    });
+        function renderLectureList(lectures) {
+            state.currentScreen = 'lectures';
+            const monthName = state.currentLectureData.monthName;
+
+            // AppBar HTML
+            const appBarHtml = `
+                <header class="app-bar">
+                    <button class="back-button" onclick="goBackToMonths()">
+                        &#8594;
+                    </button>
+                    <h1>محاضرات ${monthName}</h1>
+                    <div></div>
+                </header>
+            `;
+
+            // Main Content HTML
+            let contentHtml = '';
+            if (lectures.length === 0) {
+                contentHtml = `
+                    <div class="empty-state">
+                        لا توجد محاضرات في ${monthName} حاليًا
+                    </div>
+                `;
             } else {
-                showSnackBar('يرجى تسجيل الدخول لعرض المحاضرات.');
-                // يمكن إضافة كود لإعادة التوجيه لصفحة تسجيل الدخول هنا
+                const listItems = lectures.map(lecture => {
+                    const title = lecture.title || 'محاضرة غير مُعنونة';
+                    const lectureNumber = lecture.lectureNumber || '';
+                    const videoUrl = lecture.videoUrl || '';
+                    const logoUrl = lecture.logoUrl || '';
+                    const fullTitle = `${lectureNumber} ${title}`;
+
+                    const iconHtml = logoUrl ? 
+                        `<div class="lecture-icon"><img src="${logoUrl}" onerror="this.onerror=null; this.outerHTML='<svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'var(--primary-color)\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><rect x=\\'2\\' y=\\'6\\' width=\\'20\\' height=\\'12\\' rx=\\'2\\' ry=\\'2\\'></rect><polygon points=\\'10 10 16 12 10 14 10 10\\'></polygon></svg>'"/></div>` :
+                        `<div class="lecture-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
+                                <polygon points="10 10 16 12 10 14 10 10"></polygon>
+                            </svg>
+                        </div>`;
+
+                    return `
+                        <div class="list-item list-item-active" onclick="videoPlayer.openPlayer('${videoUrl}', '${fullTitle}')" style="cursor: pointer;">
+                            <div class="list-item-content">
+                                ${iconHtml}
+                                <div class="text-column">
+                                    <span class="name" style="color: var(--primary-color);">${title}</span>
+                                </div>
+                                <span class="lecture-number">${lectureNumber}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                contentHtml = `<div class="list-container">${listItems}</div>`;
+            }
+
+            appDiv.innerHTML = appBarHtml + contentHtml;
+        }
+
+        // =================================================
+        // === Event Handlers (Navigation & Actions) ===
+        // =================================================
+
+        function onYearChanged(newYearKey) {
+            state.selectedYearKey = newYearKey;
+            fetchMonths(newYearKey);
+        }
+
+        function openLectureList(yearKey, monthId, monthName) {
+            state.currentLectureData = { yearKey, monthId, monthName };
+            state.currentScreen = 'lectures';
+            fetchLectures(yearKey, monthId);
+        }
+        
+        function goBackToMonths() {
+            state.currentScreen = 'months';
+            renderMonthsList();
+        }
+
+
+        // =================================================
+        // === Video Player Component (EnhancedVideoPlayer) ===
+        // =================================================
+
+        const videoPlayer = (() => {
+            let player = null;
+            let currentTitle = '';
+            const speeds = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+            const qualities = ['Default', '1080p', '720p', '480p']; // Simplified qualities
+            
+            const seekLeftIndicator = document.getElementById('seek-left-indicator');
+            const seekRightIndicator = document.getElementById('seek-right-indicator');
+            const videoContainer = document.getElementById('web-video-player');
+
+            function initializePlayer(url, title) {
+                if (player) {
+                    player.dispose();
+                }
+                
+                // Set the video source
+                videoContainer.innerHTML = ''; // Clear previous source
+                videoContainer.src = url;
+
+                player = videojs(videoContainer, {
+                    autoplay: true,
+                    controls: true,
+                    fluid: true,
+                    playbackRates: speeds,
+                    poster: '', // Add poster if available
+                    sources: [{ src: url, type: 'video/mp4' }],
+                    // Use a plugin or custom solution for quality (simplified here)
+                }, function() {
+                    console.log('Video player is ready');
+                    // Add double-tap functionality
+                    addDoubleTapListener();
+                });
+
+                // Apply custom colors/styles (Overridden by CSS)
+                player.controlBar.progressControl.seekBar.el().style.backgroundColor = 'var(--primary-color)';
+                
+                // Log access when player opens
+                logLectureAccess(title);
+                currentTitle = title;
+            }
+            
+            function addDoubleTapListener() {
+                let lastClick = 0;
+                player.on('click', function(event) {
+                    const now = Date.now();
+                    const delta = now - lastClick;
+                    
+                    // Check for double click (within 300ms)
+                    if (delta < 300) {
+                        const clickX = event.clientX || event.touches[0].clientX;
+                        const videoWidth = player.el().offsetWidth;
+                        
+                        if (clickX < videoWidth / 2) {
+                            // Left side: Rewind 10s
+                            player.currentTime(player.currentTime() - 10);
+                            showSeekIndicator(seekLeftIndicator);
+                        } else {
+                            // Right side: Forward 10s
+                            player.currentTime(player.currentTime() + 10);
+                            showSeekIndicator(seekRightIndicator);
+                        }
+                    }
+                    lastClick = now;
+                });
+            }
+
+            function showSeekIndicator(indicator) {
+                indicator.classList.add('show');
+                setTimeout(() => indicator.classList.remove('show'), 500);
+            }
+
+            function openPlayer(url, title) {
+                videoPlayerScreen.style.display = 'block';
+                // Lock screen orientation to landscape (Web feature is limited)
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(e => console.log('Cannot lock orientation:', e));
+                }
+
+                initializePlayer(url, title);
+            }
+
+            function exitPlayer() {
+                if (player) {
+                    player.pause();
+                    player.dispose();
+                    player = null;
+                }
+                videoPlayerScreen.style.display = 'none';
+
+                // Unlock screen orientation (Web feature is limited)
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+                
+                // Return to portrait view (not strictly enforced on desktop)
+                // document.body.style.width = '100vw'; 
+                // document.body.style.height = '100vh';
+            }
+
+            return {
+                openPlayer,
+                exitPlayer
+            };
+        })();
+
+        // =================================================
+        // === Initialization (Auth Listener) ===
+        // =================================================
+
+        auth.onAuthStateChanged(async (user) => {
+            state.user = user;
+            state.isAuthLoading = false;
+
+            // Simplified admin check: Assume user is admin if they are logged in and you have a mechanism to check roles.
+            // For this example, let's assume if there's no user, we can't proceed, or if a specific UID is used, they are admin.
+            // YOU MUST IMPLEMENT YOUR OWN ADMIN CHECK LOGIC HERE
+            // Example: state.isAdmin = user && user.email === 'admin@example.com';
+            state.isAdmin = user && user.email === 'admin@admin.com'; // Placeholder
+            
+            if (user) {
+                await fetchUserDataAndAccess();
+            } else {
+                // Should redirect to a login page (not implemented in this single-file code)
+                appDiv.innerHTML = '<div class="empty-state">الرجاء تسجيل الدخول لعرض المحاضرات.</div>';
             }
         });
+
+        // Initial render (shows loading spinner)
+        renderLoading();
     </script>
 </body>
 </html>
