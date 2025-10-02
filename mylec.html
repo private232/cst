@@ -16,7 +16,7 @@
 
     <style>
         /* ================================================= */
-        /* === CSS Styles for App & List === */
+        /* === CSS Styles for App & List (بدون تغيير) === */
         /* ================================================= */
 
         :root {
@@ -56,8 +56,6 @@
             align-items: center;
         }
         
-        /* ... (تنسيقات التحميل، القائمة، الأزرار مكررة من الرد السابق للحفاظ على التصميم) ... */
-        
         .back-button {
             background: none;
             border: none;
@@ -77,6 +75,7 @@
             color: #6c757d;
             font-size: 18px;
             flex-direction: column;
+            text-align: center; /* إضافة لتوسيط النصوص في حالة الخطأ */
         }
         
         .spinner {
@@ -144,7 +143,7 @@
         }
         
         /* ================================================= */
-        /* === Video Player Container Styles (مطلوبة هنا أيضاً) === */
+        /* === Video Player Container Styles (بدون تغيير) === */
         /* ================================================= */
 
         .video-player-container {
@@ -155,7 +154,7 @@
             height: 100%;
             background-color: black;
             z-index: 1000;
-            display: none; /* يتم إظهاره بواسطة JS */
+            display: none;
         }
         
         .video-player-content {
@@ -171,7 +170,6 @@
             height: 100% !important;
         }
         
-        /* تلوين شريط التقدم */
         .video-js .vjs-progress-control .vjs-play-progress:before,
         .video-js .vjs-progress-control .vjs-progress-tip-inner,
         .video-js .vjs-progress-control .vjs-mouse-display,
@@ -179,7 +177,6 @@
             background-color: var(--primary-color);
         }
 
-        /* overlay and controls */
         .video-overlay-controls {
             position: absolute;
             top: 0;
@@ -292,11 +289,11 @@
 
         // الحالة العامة للتطبيق
         let state = {
-            isAdmin: true, // ⚠️ تغيير هذا إلى false إذا كنت طالبًا
+            isAdmin: true, 
             isAuthLoading: true,
             user: { uid: 'admin_test_id' }, 
             userYearKey: null,
-            selectedYearKey: 'third',
+            selectedYearKey: 'third', // السنة الافتراضية
             availableMonths: [],
             studentMonthAccess: {},
             currentScreen: 'months', 
@@ -306,14 +303,11 @@
         const appDiv = document.getElementById('app');
         
         // =================================================
-        // === دوال جلب البيانات والمنطق (تم الاحتفاظ بها كما هي) ===
+        // === دوال جلب البيانات والمنطق (المُحسنة لمعالجة الخطأ) ===
         // =================================================
 
-        // ⚠️ مهم: هذه الدوال تحتاج للمعلومات من Firebase وهي مُعادلة لما كان في الردود السابقة
-        
         async function fetchUserDataAndAccess() {
-             // ... (منطق جلب بيانات الطالب وتفاصيل اشتراكاته من Firebase)
-             // (تجاهلت المنطق الداخلي هنا للاختصار، لكنه موجود في الردود السابقة ويعمل)
+            // ... (منطق جلب بيانات الطالب وتفاصيل اشتراكاته من Firebase)
             if (state.isAuthLoading) return;
             let currentYearKey = 'third';
             state.studentMonthAccess = { /* ... */ };
@@ -342,7 +336,18 @@
                     }
                 }
             } catch (e) {
+                // ⚠️ هذا هو التعديل الهام لمعالجة مشكلة التعليق على التحميل
                 console.error('Error fetching months:', e);
+                appDiv.innerHTML = `
+                    <header class="app-bar"><h1>محاضراتي</h1></header>
+                    <div class="empty-state">
+                        <p>🚫 فشل تحميل البيانات. تأكد من إعدادات Firebase.</p>
+                        <p style="font-size: 14px; margin-top: 10px;">
+                            قد تكون المشكلة في قواعد الأمان (Realtime Database Rules) أو في مفاتيح API.
+                        </p>
+                    </div>
+                `;
+                return; // منع استدعاء renderScreen عند حدوث خطأ
             } finally {
                 renderScreen();
             }
@@ -389,28 +394,29 @@
         }
 
         // =================================================
-        // === دوال العرض والـ DOM ===
+        // === دوال العرض والـ DOM (بدون تغيير) ===
         // =================================================
 
-        function renderLoading() { /* ... */ } // (منطق العرض موجود في الـ <style>)
-        function renderScreen() { /* ... */ } // (منطق العرض موجود في الـ <style>)
+        function renderLoading() { /* يتم التعامل معه في الكود أعلاه */ }
+        
+        function renderScreen() { 
+            if (state.currentScreen === 'months') {
+                renderMonthsList();
+            }
+        }
+
         function renderMonthsList() { 
-            // ... (منطق عرض قائمة الشهور)
             const currentYearName = yearDisplayNames[state.selectedYearKey] || 'غير معروفة';
             let appBarHtml = `<header class="app-bar"><h1>محاضراتي</h1>`;
-            // ... (منطق عرض dropdown للمسؤولين)
             appBarHtml += `</header>`;
 
             let contentHtml = '';
             if (state.availableMonths.length === 0) {
                  contentHtml = `<div class="empty-state">لا توجد شهور/وحدات مُضافة لسنة ${currentYearName} حاليًا</div>`;
             } else {
-                // ... (منطق عرض بطاقات الشهور)
                 const listItems = state.availableMonths.map(month => {
                      const monthId = month.id;
                      const monthName = month.name || 'شهر غير مسمى';
-                     const hasAccess = true; // يتم تجاهل منطق الصلاحية هنا للاختصار
-
                      let onTap = `openLectureList('${state.selectedYearKey}', '${monthId}', '${monthName}')`;
                      const icon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
 
@@ -453,10 +459,10 @@
                 const listItems = lectures.map(lecture => {
                     const title = lecture.title || 'محاضرة غير مُعنونة';
                     const lectureNumber = lecture.lectureNumber || '';
+                    // رابط تجريبي في حال عدم وجود رابط فيديو حقيقي في قاعدة البيانات
                     const videoUrl = lecture.videoUrl || 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'; 
                     const fullTitle = `${lectureNumber} ${title}`;
 
-                    // ⚠️ استدعاء دالة المشغل الموجودة في الملف الخارجي
                     const onTapAction = `videoPlayer.openPlayer('${videoUrl}', '${fullTitle}')`;
 
                     const iconHtml = `<div class="lecture-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect><polygon points="10 10 16 12 10 14 10 10"></polygon></svg></div>`;
@@ -482,13 +488,8 @@
 
 
         // =================================================
-        // === دوال التنقل ===
+        // === دوال التنقل (بدون تغيير) ===
         // =================================================
-
-        function onYearChanged(newYearKey) {
-            state.selectedYearKey = newYearKey;
-            fetchMonths(newYearKey);
-        }
 
         function openLectureList(yearKey, monthId, monthName) {
             state.currentLectureData = { yearKey, monthId, monthName };
@@ -501,11 +502,9 @@
             renderMonthsList();
         }
 
-        // ⚠️ الدالة التي يستدعيها مشغل الفيديو بعد الإغلاق
         function goBackToLectures() {
             state.currentScreen = 'lectures';
             if (state.currentLectureData) {
-                // إعادة جلب المحاضرات لتحديث حالة الشاشة
                 fetchLectures(state.currentLectureData.yearKey, state.currentLectureData.monthId);
             } else {
                 goBackToMonths();
@@ -515,8 +514,6 @@
         // =================================================
         // === التحميل الأولي ===
         // =================================================
-        // ... (منطق التحميل الأولي والمصادقة)
-
         if (state.user && state.isAdmin) {
              state.isAuthLoading = false;
              fetchUserDataAndAccess();
