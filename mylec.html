@@ -16,14 +16,12 @@
 
     <style>
         /* ================================================= */
-        /* === CSS Styles for App & List (بدون تغيير) === */
+        /* === CSS Styles for App & List === */
         /* ================================================= */
 
         :root {
             --primary-color: #6C5CE7;
             --secondary-color: #f8f9fa;
-            --success-color: #155724;
-            --error-color: #dc3545;
         }
 
         * {
@@ -32,6 +30,11 @@
             padding: 0;
             direction: rtl;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* منع تحديد النص (خطوة أولى للحماية) */
+            user-select: none; 
+            -webkit-user-select: none; 
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         body, html {
@@ -75,7 +78,7 @@
             color: #6c757d;
             font-size: 18px;
             flex-direction: column;
-            text-align: center; /* إضافة لتوسيط النصوص في حالة الخطأ */
+            text-align: center;
         }
         
         .spinner {
@@ -102,8 +105,6 @@
             overflow: hidden;
             transition: all 0.2s;
         }
-
-        .list-item-active { border-color: var(--primary-color); }
         
         .list-item-content {
             padding: 15px;
@@ -143,7 +144,7 @@
         }
         
         /* ================================================= */
-        /* === Video Player Container Styles (بدون تغيير) === */
+        /* === Video Player Container Styles (مُعدل للحماية) === */
         /* ================================================= */
 
         .video-player-container {
@@ -155,6 +156,9 @@
             background-color: black;
             z-index: 1000;
             display: none;
+            /* حماية إضافية للـ Screen Capture في بعض المتصفحات */
+            user-select: none;
+            -webkit-user-select: none;
         }
         
         .video-player-content {
@@ -168,6 +172,9 @@
         .video-js {
             width: 100% !important;
             height: 100% !important;
+            /* حماية ضد التقاط الشاشة في بعض أنظمة التشغيل (تجريبي) */
+            -webkit-user-select: none;
+            user-select: none;
         }
         
         .video-js .vjs-progress-control .vjs-play-progress:before,
@@ -303,11 +310,10 @@
         const appDiv = document.getElementById('app');
         
         // =================================================
-        // === دوال جلب البيانات والمنطق (المُحسنة لمعالجة الخطأ) ===
+        // === دوال جلب البيانات والمنطق ===
         // =================================================
 
         async function fetchUserDataAndAccess() {
-            // ... (منطق جلب بيانات الطالب وتفاصيل اشتراكاته من Firebase)
             if (state.isAuthLoading) return;
             let currentYearKey = 'third';
             state.studentMonthAccess = { /* ... */ };
@@ -336,7 +342,7 @@
                     }
                 }
             } catch (e) {
-                // ⚠️ هذا هو التعديل الهام لمعالجة مشكلة التعليق على التحميل
+                // معالجة خطأ التحميل
                 console.error('Error fetching months:', e);
                 appDiv.innerHTML = `
                     <header class="app-bar"><h1>محاضراتي</h1></header>
@@ -347,7 +353,7 @@
                         </p>
                     </div>
                 `;
-                return; // منع استدعاء renderScreen عند حدوث خطأ
+                return; 
             } finally {
                 renderScreen();
             }
@@ -394,10 +400,17 @@
         }
 
         // =================================================
-        // === دوال العرض والـ DOM (بدون تغيير) ===
+        // === دوال العرض والـ DOM ===
         // =================================================
 
-        function renderLoading() { /* يتم التعامل معه في الكود أعلاه */ }
+        function renderLoading() { 
+            appDiv.innerHTML = `
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px;">يتم تحميل البيانات...</p>
+                </div>
+            `;
+        }
         
         function renderScreen() { 
             if (state.currentScreen === 'months') {
@@ -488,7 +501,7 @@
 
 
         // =================================================
-        // === دوال التنقل (بدون تغيير) ===
+        // === دوال التنقل ===
         // =================================================
 
         function openLectureList(yearKey, monthId, monthName) {
