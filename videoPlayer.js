@@ -6,65 +6,82 @@ const videoPlayer = (() => {
     const speeds = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
     const seekAmount = 10; 
 
-    // دالة مساعدة لضمان جلب العناصر بأمان
+    // جلب العناصر الأساسية
     const getElement = (id) => document.getElementById(id);
-    const seekLeftIndicator = getElement('seek-left-indicator');
-    const seekRightIndicator = getElement('seek-right-indicator');
     const videoPlayerScreen = getElement('video-player-screen');
     const overlay = document.querySelector('.video-overlay-controls');
 
     // =======================================================
-    // === وظائف الحماية ضد التقاط الشاشة وتغيير التركيز (Anti-Screencap) ===
+    // === وظائف الحماية ضد التقاط الشاشة (Anti-Screencap) ===
     // =======================================================
     let lastTimeHidden = 0;
 
     function handleVisibilityChange() {
-        if (player && videoPlayerScreen) {
-            if (document.hidden) {
-                // إذا أصبحت الصفحة غير مرئية (مستخدم فتح تطبيق آخر أو أداة تسجيل)
-                player.pause();
-                
-                // إخفاء الفيديو وعرض رسالة تحذير
-                videoPlayerScreen.style.backgroundColor = 'black';
-                videoPlayerScreen.innerHTML = `
-                    <div style="color: white; font-size: 24px; text-align: center; margin-top: 50%;">
-                        توقف الفيديو مؤقتاً لأسباب أمنية.
-                    </div>
-                `;
-                lastTimeHidden = Date.now();
-                console.warn("Screen lost focus. Video paused for security.");
-            } else {
-                // إذا عاد المستخدم للصفحة
-                const hiddenDuration = Date.now() - lastTimeHidden;
-                
-                // إعادة بناء عنصر الفيديو الفارغ في الشاشة
-                videoPlayerScreen.innerHTML = `
-                    <div class="video-player-content">
-                         <video id="web-video-player" class="video-js vjs-default-skin" controls preload="auto" data-setup='{}' playsinline></video>
-                    </div>
-                    <div class="video-overlay-controls">...</div> 
-                `;
+        if (!player || !videoPlayerScreen) return;
 
-                // إعادة تهيئة المشغل
-                if (player) {
-                    const currentUrl = player.currentSrc();
-                    player.dispose(); // تفريغ المشغل القديم قبل التهيئة الجديدة
-                    initializePlayer(currentUrl, currentTitle);
-                    
-                    if (hiddenDuration > 1000) {
-                        alert('تم استئناف التشغيل. يرجى العلم بأن محاولة التقاط محتوى الفيديو محظورة ومسجلة.');
-                    }
+        if (document.hidden) {
+            // 🛑 الحالة 1: إخفاء الشاشة وتنبيه أمني
+            player.pause();
+            
+            // إخفاء المحتوى الفعلي وعرض رسالة أمنية
+            videoPlayerScreen.style.backgroundColor = 'black';
+            videoPlayerScreen.innerHTML = `
+                <div style="
+                    color: white; 
+                    font-size: 24px; 
+                    text-align: center; 
+                    margin: 50vh 20px 0; 
+                    transform: translateY(-50%);
+                ">
+                    توقف الفيديو مؤقتاً. محاولات التسجيل أو الالتقاط محظورة.
+                    <br><button onclick="videoPlayer.exitPlayer()" style="
+                        margin-top: 15px; 
+                        padding: 10px 20px; 
+                        background: #dc3545; 
+                        border: none; 
+                        color: white; 
+                        border-radius: 5px;
+                        cursor: pointer;
+                    ">إغلاق المشغل</button>
+                </div>
+            `;
+            lastTimeHidden = Date.now();
+            console.warn("Security Alert: Screen lost focus. Video paused.");
+            
+        } else {
+            // 🔄 الحالة 2: إعادة البناء عند عودة التركيز
+            const hiddenDuration = Date.now() - lastTimeHidden;
+            
+            // إعادة بناء هيكل المشغل في الـ DOM
+            videoPlayerScreen.innerHTML = `
+                <div class="video-player-content">
+                     <video id="web-video-player" class="video-js vjs-default-skin" controls preload="auto" data-setup='{}' playsinline></video>
+                </div>
+                <div class="video-overlay-controls">
+                    <div class="top-controls">
+                        <button class="close-btn" onclick="videoPlayer.exitPlayer()">&#10005;</button>
+                    </div>
+                    </div>
+            `;
+
+            // إعادة التهيئة
+            if (player) {
+                const currentUrl = player.currentSrc();
+                player.dispose(); // تفريغ المشغل القديم
+                initializePlayer(currentUrl, currentTitle);
+                
+                if (hiddenDuration > 1000) {
+                    // تنبيه المستخدم بعد اكتشاف محاولة تسجيل
+                    alert('تم استئناف التشغيل. محاولة التقاط محتوى الفيديو مسجلة وغير مسموح بها.');
                 }
             }
         }
     }
 
-    // ربط الحدث
     function setupSecurityListeners() {
         document.addEventListener("visibilitychange", handleVisibilityChange);
     }
 
-    // إزالة الربط
     function removeSecurityListeners() {
         document.removeEventListener("visibilitychange", handleVisibilityChange);
     }
@@ -79,15 +96,13 @@ const videoPlayer = (() => {
             player = null; 
         }
         
-        // إعادة إنشاء عنصر الفيديو لضمان عمل Video.js
         const videoContainer = getElement('web-video-player');
         if (!videoContainer) {
-            // إذا لم يتم العثور عليه، ربما الشاشة السوداء الأمنية هي الظاهرة
-            console.error("خطأ حرج: العنصر #web-video-player مفقود في DOM.");
+            console.error("Critical Error: #web-video-player element is missing.");
             return;
         }
         
-// ... (داخل دالة initializePlayer في videoPlayer.js)
+        const parent = videoContainer.parentNode;
         const newVideoContainer = document.createElement('video');
         newVideoContainer.id = 'web-video-player';
         newVideoContainer.className = 'video-js vjs-default-skin';
@@ -96,22 +111,16 @@ const videoPlayer = (() => {
         newVideoContainer.setAttribute('data-setup', '{}');
         newVideoContainer.setAttribute('playsinline', '');
 
-        // 🛑 الخصائص الأمنية الجديدة: 🛑
-        // 1. خاصية منع النسخ والالتقاط على مستوى DOM (لبعض الأجهزة)
+        // 🛑 الخصائص الأمنية القصوى (قد لا تعمل على iOS) 🛑
         newVideoContainer.setAttribute('data-nosniff', 'true'); 
-        // 2. خاصية لإجبار بعض الأجهزة على تفعيل الحماية في Android/Chrome
         newVideoContainer.setAttribute('secure', 'true');
-        // 3. منع المتصفح من وضع الفيديو كطبقة عليا (قد يحسن الحماية)
         newVideoContainer.style.setProperty('z-index', '99999'); 
         newVideoContainer.style.setProperty('transform', 'translateZ(0)');
-
-        // ... (بقية الكود)
         
         parent.replaceChild(newVideoContainer, videoContainer);
         
         const updatedVideoContainer = newVideoContainer;
         
-        // تهيئة المشغل
         player = videojs(updatedVideoContainer, {
             autoplay: true, 
             controls: true,
@@ -122,7 +131,7 @@ const videoPlayer = (() => {
                 type: url.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4' 
             }], 
         }, function() {
-            console.log('Video player is ready and initialized');
+            console.log('Video player is ready.');
             
             if (this.qualitySelector) {
                 this.qualitySelector({ defaultQuality: 'auto' });
@@ -139,9 +148,14 @@ const videoPlayer = (() => {
     function addDoubleTapListener() {
         let lastClickTime = 0;
         
-        if(overlay) overlay.style.pointerEvents = 'all'; 
+        const overlayControls = document.querySelector('.video-overlay-controls');
+        const seekLeftIndicator = getElement('seek-left-indicator');
+        const seekRightIndicator = getElement('seek-right-indicator');
 
-        if (overlay) overlay.onclick = function(event) {
+        if(overlayControls) overlayControls.style.pointerEvents = 'all'; 
+
+        if (overlayControls) overlayControls.onclick = function(event) {
+            // ... (منطق النقر المزدوج)
             if (player) player.userActive(true); 
 
             const now = Date.now();
@@ -158,10 +172,12 @@ const videoPlayer = (() => {
 
                 if (relativeX > videoWidth / 2) {
                     player.currentTime(player.currentTime() - seekAmount); 
-                    if(seekLeftIndicator) showSeekIndicator(seekLeftIndicator); 
+                    if(seekLeftIndicator) seekLeftIndicator.classList.add('show');
+                    setTimeout(() => { if(seekLeftIndicator) seekLeftIndicator.classList.remove('show'); }, 500); 
                 } else {
                     player.currentTime(player.currentTime() + seekAmount); 
-                    if(seekRightIndicator) showSeekIndicator(seekRightIndicator);
+                    if(seekRightIndicator) seekRightIndicator.classList.add('show');
+                    setTimeout(() => { if(seekRightIndicator) seekRightIndicator.classList.remove('show'); }, 500);
                 }
                 
                 lastClickTime = 0; 
@@ -174,11 +190,6 @@ const videoPlayer = (() => {
         });
     }
 
-    function showSeekIndicator(indicator) {
-        indicator.classList.add('show');
-        setTimeout(() => indicator.classList.remove('show'), 500);
-    }
-
     function openPlayer(url, title) {
         if (!url) {
             alert('رابط الفيديو غير متوفر.');
@@ -186,14 +197,13 @@ const videoPlayer = (() => {
         }
         
         if (!videoPlayerScreen) {
-             console.error("خطأ: العنصر #video-player-screen مفقود في DOM.");
+             console.error("Error: #video-player-screen element is missing.");
              return;
         }
         videoPlayerScreen.style.display = 'block';
 
         if (typeof state !== 'undefined') state.currentScreen = 'video';
         
-        // ⚠️ ربط مستمعي الحماية عند فتح المشغل
         setupSecurityListeners(); 
 
         if (screen.orientation && screen.orientation.lock) {
@@ -204,9 +214,6 @@ const videoPlayer = (() => {
     }
 
     function exitPlayer() {
-        if (typeof state !== 'undefined') state.currentScreen = 'lectures';
-        
-        // ⚠️ إزالة ربط مستمعي الحماية عند إغلاق المشغل
         removeSecurityListeners(); 
         
         if (player) {
@@ -215,23 +222,21 @@ const videoPlayer = (() => {
             player = null;
         }
         
-        if (overlay) overlay.style.pointerEvents = 'none'; 
+        const overlayControls = document.querySelector('.video-overlay-controls');
+        if (overlayControls) overlayControls.style.pointerEvents = 'none'; 
 
         if (videoPlayerScreen) {
              videoPlayerScreen.style.display = 'none';
-             // إعادة تهيئة المحتوى الداخلي لتجنب ظهور الرسالة الأمنية في المرة القادمة
+             // إعادة تهيئة المحتوى الداخلي لإعادة مؤشر التقديم/التأخير
+             // هذا الجزء يفترض أنك وضعت مؤشرات التقديم/التأخير في index.html كما تم إرساله مسبقًا.
              videoPlayerScreen.innerHTML = `
                 <div class="video-player-content">
                      <video id="web-video-player" class="video-js vjs-default-skin" controls preload="auto" data-setup='{}' playsinline></video>
                 </div>
-                <div class="video-overlay-controls">
-                    <div class="top-controls">
-                        <button class="close-btn" onclick="videoPlayer.exitPlayer()">&#10005;</button>
-                    </div>
-                </div>
                 `;
         }
-
+        
+        if (typeof state !== 'undefined') state.currentScreen = 'lectures';
         if (screen.orientation && screen.orientation.unlock) {
             screen.orientation.unlock();
         }
